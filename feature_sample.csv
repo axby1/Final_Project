@@ -1,0 +1,6 @@
+,File,bodyLength,bscr,dse,dsr,entropy,hasHttp,hasHttps,has_ip,numDigits,numImages,numLinks,numParams,numTitles,num_%20,num_@,sbr,scriptLength,specialChars,sscr,urlIsLive,urlLength
+0,spam_dataset,31,0.064516129032258,0,0,-4.708307065620170,TRUE,FALSE,0,27,1,0,0,0,0,0,0.0,0,2,0.0,FALSE,81
+5277,Benign_list_big_final,1050,0.3542857142857140,1938,8287,-4.193594846993420,TRUE,FALSE,0,52,0,0,0,0,0,0,1.0,1050,372,2.8225806451612900,FALSE,177
+5257,phishing_dataset,0,0.0,0,0,-4.094176814761870,TRUE,FALSE,0,0,0,0,0,0,0,0,0.0,0,0,0.0,FALSE,65
+3027,Malware_dataset,0,0.0,0,0,-3.772493936090280,TRUE,FALSE,0,25,0,1,0,0,0,0,0.0,0,0,0.0,FALSE,90
+2623,Defacement,0,0.0,0,0,-4.723920477143780,TRUE,FALSE,0,7,0,0,3,0,0,0,0.0,0,0,0.0,FALSE,97
