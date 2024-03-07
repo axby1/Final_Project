@@ -1,5 +1,7 @@
+
+
 from flask import Flask, request, jsonify
-from optimised_algo import main  # Import your Python script or function here
+from your_python_script import process_url  # Import your Python script or function here
 
 app = Flask(__name__)
 
@@ -9,8 +11,7 @@ def classify_url():
     url = data.get('url')
 
     # Process the URL using your Python script or function
-
-    category = main(url)
+    category = process_url(url)
 
     return jsonify({'category': category})
 
