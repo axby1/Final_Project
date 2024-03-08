@@ -1,0 +1,55 @@
+<!-- this is a simple webpage that takes in a url as a form and sends it to backend point /process_url for processing 
+via optimised_algo.py and prints the result back on the same page -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Processing</title>
+</head>
+<body>
+    <h1>URL Processing</h1>
+
+    <form id="urlForm">
+        <label for="urlInput">Enter URL:</label>
+        <input type="text" id="urlInput" name="url" required>
+        <button type="button" onclick="processUrl()">Process URL</button>
+    </form>
+
+    <div id="resultContainer"></div>
+
+    <script>
+        function processUrl() {
+            const urlInput = document.getElementById('urlInput');
+            const resultContainer = document.getElementById('resultContainer');
+
+            const url = urlInput.value.trim();
+
+            if (url) {
+                // Send the URL to the backend for processing
+                /* /process_url is an example of a route (or endpoint) in your Flask application. 
+                In the provided example, it's a route that handles POST requests and is designed
+                 to process a URL sent from the frontend.*/
+                fetch('/process_url', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: url }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    resultContainer.innerHTML = `<p>Result: ${data.result}</p>`;
+                })
+                .catch(error => {
+                    console.error('Error processing the URL:', error);
+                    resultContainer.innerHTML = '<p>Error processing the URL. Please try again.</p>';
+                });
+            } else {
+                resultContainer.innerHTML = '<p>Please enter a URL.</p>';
+            }
+        }
+    </script>
+</body>
+</html>
