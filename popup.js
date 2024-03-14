@@ -2,14 +2,13 @@
 // note the backendpoint URL = http://localhost:3000/classify 
 // always go to this page before using the plugin
 
-
 document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('classify-button').addEventListener('click', classifyUrl);
   });
   
   function classifyUrl() {
     const urlInput = document.getElementById('url');
-    const resultContainer = document.getElementById('result-container');
+    const resultContainer = document.getElementById('response');
   
     const url = urlInput.value.trim();
   

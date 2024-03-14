@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Input</title>
+    <link rel="stylesheet" href="Frontend.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Enter URL to be classified</h1>
+        <form id="classification-form">
+            <!--<label for="url">URL:</label>-->
+            <input type="text" id="url" name="url" required>
+            <button type="button" id="classify-button">Classify</button>
+        </form>
+        <div id="response"></div>
+        <div id="graph1"></div>
+        <div id="graph2"></div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
