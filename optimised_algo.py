@@ -65,14 +65,24 @@ def load_model_objects(encoder_path="lblenc.npy", scaler_path='scaler.sav', mode
     return encoder, scaler, model
 
 def classify_url(url, encoder, scaler, model, order):
-    features = d.UrlFeaturizer(url).run()
-    test = pd.DataFrame([features[i] for i in order]).replace(True, 1).replace(False, 0).to_numpy().reshape(1, -1)
+    #new //expands the url and sends the expanded url through to the UrlFeaturizer()
+    session = requests.Session()  # Use a session for connection pooling
+    try:
+        response = session.head(url, allow_redirects=True, timeout=5)
+        url = response.url
+    except requests.RequestException as e:
+        print(f"Error expanding URL {url}: {e}")
+    # / new
+    finally:
+        #print("new: ",url)
+        features = d.UrlFeaturizer(url).run()
+        test = pd.DataFrame([features[i] for i in order]).replace(True, 1).replace(False, 0).to_numpy().reshape(1, -1)
 
-    scaled_features = scaler.transform(test)
-    predicted = model.predict(scaled_features)
-    predicted_class = encoder.inverse_transform(predicted)
+        scaled_features = scaler.transform(test)
+        predicted = model.predict(scaled_features)
+        predicted_class = encoder.inverse_transform(predicted)
 
-    return predicted_class[0]
+        return predicted_class[0]
 
 
 def visualize_confusion_matrix(y_true, y_pred, target_names):
