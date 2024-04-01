@@ -10,9 +10,9 @@ import os
 print(os.getcwd())
 os.chdir(r'C:\Users\abbya\OneDrive\Desktop\simply\URL')
 
-l = ['DefacementSitesURLFiltered.csv','phishing_dataset.csv','Malware_dataset.csv','spam_dataset.csv','Benign_list_big_final.csv']
+l = ['Defacement.csv','Phishing.csv','Malware.csv','Spam.csv','Benign.csv']
 
-desired_columns = ['File', 'bodyLength', 'bscr', 'dse', 'dsr', 'entropy', 'hasHttp', 'hasHttps', 'has_ip', 'numDigits', 'numImages', 'numLinks', 'numParams', 'numTitles', 'num_%20', 'num_@', 'sbr', 'scriptLength', 'specialChars', 'sscr', 'urlIsLive', 'urlLength']
+desired_columns = ['File', 'bodyLength', 'bscr', 'dse', 'dsr', 'entropy', 'hasHttp', 'hasHttps', 'has_ip', 'numDigits', 'numImages', 'numLinks', 'numParams', 'numTitles', 'num_%20', 'num_@', 'sbr', 'scriptLength', 'specialChars', 'sscr', 'urlIsLive', 'urlLength','has_tld','tld_count','cwsc','NS_count','MX_count','has_ssl','redirect_count','asn','ipgeo','ptr','has_rbl','blacklisted']
 
 emp = data_creation_v3.UrlFeaturizer("").run().keys()
 A = pd.DataFrame(columns = desired_columns)

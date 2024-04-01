@@ -1,3 +1,6 @@
+from urllib import parse
+import geoip2 as geoip2
+import requests
 import whois
 from datetime import datetime, timezone
 import math
@@ -5,6 +8,15 @@ import pandas as pd
 import numpy as np
 from pyquery import PyQuery
 from requests import get
+from rblwatch import RBLSearch
+import re
+from dns import resolver,reversename
+import requests
+import socket
+import geocoder
+
+from blacklist import virustotal
+
 
 
 class UrlFeaturizer(object):
@@ -163,6 +175,166 @@ class UrlFeaturizer(object):
     def urlIsLive(self):
         return self.response == 200
 
+    def check_tld(self):
+        """Check for presence of Top-Level Domains (TLD)."""
+        file = open(r'C:\Users\abbya\OneDrive\Desktop\simply\tlds.txt', 'r')
+        pattern = re.compile("[a-zA-Z0-9.]")
+        for line in file:
+            i = (self.url.lower().strip()).find(line.strip())  # Use self.url to access the URL string
+            while i > -1:
+                if ((i + len(line) - 1) >= len(self.url)) or not pattern.match(
+                        self.url[i + len(line) - 1]):  # Use self.url
+                    file.close()
+                    return 1
+                i = self.url.find(line.strip(), i + 1)  # Use self.url
+        file.close()
+        return 0
+
+    def count_tld(self):
+        """Return amount of Top-Level Domains (TLD) present in the URL."""
+        file = open(r'C:\Users\abbya\OneDrive\Desktop\simply\tlds.txt', 'r')
+        count = 0
+        pattern = re.compile("[a-zA-Z0-9.]")
+        for line in file:
+            i = (self.url.lower().strip()).find(line.strip())
+            while i > -1:
+                if ((i + len(line) - 1) >= len(self.url)) or not pattern.match(self.url[i + len(line) - 1]):
+                    count += 1
+                i = self.url.find(line.strip(), i + 1)
+        file.close()
+        return count
+
+    def check_word_server_client(self):
+        """Return whether the "server" or "client" keywords exist in the domain."""
+        if "server" in self.url.lower() or "client" in self.url.lower():
+            return 1
+        return 0
+
+    def count_name_servers(self):
+        """Return number of NameServers (NS) resolved."""
+        try:
+            count = 0
+            answers = resolver.query(self.url, 'NS')
+            return len(answers) if answers else 0
+        except:
+            return 0
+    def count_mail_servers(self):
+        """Return number of NameServers (NS) resolved."""
+        try:
+            count = 0
+            answers = resolver.query(self.url, 'MX')
+            return len(answers) if answers else 0
+        except:
+            return 0
+
+    def check_ssl(self):
+        """Check if the SSL certificate is valid."""
+        try:
+            response = requests.get(self.url, verify=True, timeout=3)
+            return True
+        except Exception:
+            return False
+
+    def count_redirects(self):
+        """Return the number of redirects in a URL."""
+        try:
+            response = requests.get(self.url, timeout=3)
+            if response.history:
+                return len(response.history) if response.history else 0
+            else:
+                return 0
+        except Exception:
+            return 0
+
+    def get_asn_number(self):
+        """Return the ANS number associated with the IP."""
+        try:
+            with geoip2.database.Reader(r'C:\Users\abbya\OneDrive\Desktop\simply\GeoLite2-ASN.mmdb') as reader:
+                if self.check_ip():
+                    ip = self.url
+                else:
+                    ip = resolver.query(self.url, 'A')
+                    ip = ip[0].to_text()
+
+                if ip:
+                    response = reader.asn(ip)
+                    return response.autonomous_system_number
+                else:
+                    return 0
+        except Exception:
+            return 0
+
+    def ipGeolocation(self):
+        try:
+            # Fetch IP address of the domain
+            ip_address = socket.gethostbyname(self.domain)
+            # Use geocoder to get the location based on IP
+            location = geocoder.ip(ip_address)
+            if location:
+                return location.latlng  # Return latitude and longitude
+            else:
+                return 0
+        except Exception as e:
+
+            return 0  ##Return 0 if no ip location found
+
+    def get_ptr(self):
+        """Return PTR associated with IP."""
+        try:
+            if self.check_ip():
+                ip = self.url
+            else:
+                ip = resolver.query(self.url, 'A')
+                ip = ip[0].to_text()
+            if ip:
+                r = reversename.from_address(ip)
+                result = resolver.query(r, 'PTR')[0].to_text()
+                return result
+            else:
+                return 0
+        except Exception:
+            return 0
+
+    def check_rbl(self):
+        """Check domain presence on RBL (Real-time Blackhole List)."""
+        searcher = RBLSearch(self.domain)
+        try:
+            listed = searcher.listed
+        except Exception:
+            return False
+        for key in listed:
+            if key == 'SEARCH_HOST':
+                pass
+            elif listed[key]['LISTED']:
+                return True
+        return False
+
+    def check_blacklists(self):
+        """Check if the URL or Domain is malicious through Google Safebrowsing, Virustotal"""
+
+        if (virustotal(self.url)!=0):
+            return True
+        else:
+            return False
+
+    def check_blacklists_ip(self):
+        """Check if the IP is malicious through Google Safebrowsing, Virustotal"""
+        try:
+            if self.check_ip():
+                ip = self.url
+            else:
+                ip = resolver.query(self.url, 'A')
+                ip = ip[0].to_text()
+
+            if ip:
+                if (virustotal(ip)):
+                    return True
+                return False
+            else:
+                return False
+        except Exception:
+            return False
+
     def run(self):
         data = {}
         data['entropy'] = self.entropy()
@@ -187,5 +359,19 @@ class UrlFeaturizer(object):
         data['num_%20'] = self.url.count("%20")
         data['num_@'] = self.url.count("@")
         data['has_ip'] = self.ip()
+        data['has_tld'] = self.check_tld()
+        data['tld_count'] = self.count_tld()
+        data['cwsc'] = self.check_word_server_client()
+        data['NS_count'] = self.count_name_servers()
+        data['MX_count'] = self.count_mail_servers()
+        data['has_ssl']  = self.check_ssl()
+        data['redirect_count'] = self.count_redirects()
+        data['asn'] = self.get_asn_number()
+        data['ipgeo'] = self.ipGeolocation()
+        data['ptr'] = self.get_ptr()
+        data['has_rbl'] = self.check_rbl()
+        data['blacklisted'] = self.check_blacklists()
+        #data['blacklisted_ip'] = self.check_blacklists_ip()
+
 
         return data
