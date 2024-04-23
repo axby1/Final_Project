@@ -11,6 +11,9 @@ from keras.layers import LSTM, Dense
 
 import data_creation_v3 as d
 
+import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix
+
 # Load or preprocess your data as in your existing code
 data = pd.read_csv("feature.csv")
 data.drop(columns='Unnamed: 0', inplace=True)
@@ -42,7 +45,7 @@ shuffled_Y = shuffled_dataset['Label']
 X_train, X_test, Y_train, Y_test = train_test_split(shuffled_X, shuffled_Y, test_size=0.2, random_state=42)
 
 # Reshape data for LSTM input
-sequence_length = 1  # Replace with appropriate value
+sequence_length = 1
 
 # Reshape data for LSTM input using the fixed sequence length
 X_train_lstm = np.array([X_train.iloc[i:i+sequence_length].values for i in range(len(X_train) - sequence_length + 1)])
@@ -52,9 +55,16 @@ X_test_lstm = np.array([X_test.iloc[i:i+sequence_length].values for i in range(l
 num_classes = len(np.unique(Y))  # Number of unique classes
 lstm_model = Sequential()
 lstm_model.add(LSTM(units=50, input_shape=(sequence_length, X_train.shape[1])))
+
+lstm_model.add(Dense(60, activation='relu'))  # Additional hidden layer
+lstm_model.add(Dense(50, activation='relu'))  # Additional hidden layer
+lstm_model.add(Dense(40, activation='relu'))  # Additional hidden layer
+lstm_model.add(Dense(30, activation='relu'))  # Additional hidden layer
+lstm_model.add(Dense(25, activation='relu'))  # Additional hidden layer
+
 lstm_model.add(Dense(num_classes, activation='softmax'))  # Softmax for multi-class
 lstm_model.compile(loss='sparse_categorical_crossentropy', optimizer='adam', metrics=['accuracy'])  # Use sparse categorical crossentropy for integer labels
-lstm_model.fit(X_train_lstm, Y_train, epochs=10, batch_size=32)
+lstm_model.fit(X_train_lstm, Y_train, epochs=25, batch_size=32)
 
 # Evaluate LSTM
 lstm_probabilities = lstm_model.predict(X_test_lstm)
@@ -73,19 +83,48 @@ print("Classification Report:")
 target_names = ['Benign', 'Defacement', 'Malware', 'Phishing', 'Spam']
 classification_rep = classification_report(Y_test, lstm_predictions, target_names=target_names)
 
-# Print the classification report
+
 print(classification_rep)
 
 
 
+target_names = ['Benign', 'Defacement', 'Malware', 'Phishing', 'Spam']
 
-# Save the trained LSTM model
+# Calculate confusion matrix
+cm = confusion_matrix(Y_test, lstm_predictions)
+
+# Plot confusion matrix
+plt.figure(figsize=(8, 6))
+plt.imshow(cm, interpolation='nearest', cmap=plt.cm.Blues)
+plt.title('Confusion Matrix')
+plt.colorbar()
+tick_marks = np.arange(len(target_names))
+plt.xticks(tick_marks, target_names, rotation=45)
+plt.yticks(tick_marks, target_names)
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+
+# Add text annotations
+for i in range(len(target_names)):
+    for j in range(len(target_names)):
+        plt.text(j, i, format(cm[i, j], 'd'), horizontalalignment="center",
+                    color="white" if cm[i, j] > cm.max() / 2 else "black")
+
+plt.tight_layout()
+plt.show()
+
+
+
+
+
+
+
 lstm_model.save("lstm_model.h5")
 
 # Load the saved LSTM model
 loaded_lstm_model = load_model("lstm_model.h5")
 
-# Now, you can use the loaded model to make predictions on new data
+
 while 1:
     url = input("enter a url: ")
     features = d.UrlFeaturizer(url).run()
